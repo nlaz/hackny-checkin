@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+def HACKNY_APP_ID = '"' + HackNYAppId + '"';
+def HACKNY_APP_SECRET = '"' + HackNYSecret + '"';
+
 android {
     compileSdkVersion 22
     buildToolsVersion "21.1.2"
@@ -10,6 +13,9 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "HACKNY_APP_ID", HACKNY_APP_ID
+        buildConfigField "String", "HACKNY_APP_SECRET", HACKNY_APP_SECRET
     }
     buildTypes {
         release {
@@ -21,4 +27,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.0.0'
+    compile 'com.squareup.okhttp:okhttp:2.0.0'
 }

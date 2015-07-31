@@ -3,6 +3,7 @@ package hackny.checkin;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,14 +13,24 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import hackny.checkin.models.User;
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
 
-    private ArrayList<String> objects;
+    private static final String TAG = "MainActivityFragment";
+
+    private ArrayList<User> objects;
     private ListView listView;
+    private CheckInAdapter adapter;
 
     public MainActivityFragment() {
     }
@@ -31,18 +42,45 @@ public class MainActivityFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         listView = (ListView) view.findViewById(R.id.listview);
+        objects = new ArrayList<User>();
+        adapter = new CheckInAdapter(getActivity(),objects);
 
+        listView.setAdapter(adapter);
 
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint("http://my.mlh.io")
+                .build();
+
+        CheckInService service = restAdapter.create(CheckInService.class);
+
+        Callback callback = new Callback<List<User>>() {
+
+            @Override
+            public void success(List<User> users, Response response) {
+                Log.d(TAG, users.toString());
+                for (User user : users) {
+                  objects.add(user);
+                }
+
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e(TAG, error.toString());
+            }
+        };
+
+        service.listUsers(BuildConfig.HACKNY_APP_ID, BuildConfig.HACKNY_APP_SECRET, callback);
         return view;
     }
 
     public class CheckInAdapter extends BaseAdapter {
 
         private LayoutInflater mInflater;
-        private ArrayList<String> objects;
+        private ArrayList<User> objects;
 
-
-        public CheckInAdapter(Context context, ArrayList<String> objects){
+        public CheckInAdapter(Context context, ArrayList<User> objects){
             mInflater = LayoutInflater.from(context);
             this.objects = objects;
         }
@@ -74,8 +112,12 @@ public class MainActivityFragment extends Fragment {
                 holder = (ViewHolder) view.getTag();
             }
 
-            //TODO get User and set fields;
-            
+            User user = objects.get(position);
+
+            holder.name.setText(user.getFull_name());
+            holder.school.setText(user.getSchool().getName());
+            holder.shirt.setText(user.getShirt_size());
+
             return view;
         }
 
