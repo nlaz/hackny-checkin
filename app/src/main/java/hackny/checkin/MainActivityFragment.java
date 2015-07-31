@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,9 +29,11 @@ public class MainActivityFragment extends Fragment {
 
     private static final String TAG = "MainActivityFragment";
 
-    private ArrayList<User> objects;
+    private List<User> objects;
     private ListView listView;
     private CheckInAdapter adapter;
+    private CheckInService service;
+    private Callback callback;
 
     public MainActivityFragment() {
     }
@@ -40,10 +43,11 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
+        setHasOptionsMenu(true);
 
         listView = (ListView) view.findViewById(R.id.listview);
         objects = new ArrayList<User>();
-        adapter = new CheckInAdapter(getActivity(),objects);
+        adapter = new CheckInAdapter(getActivity(), objects);
 
         listView.setAdapter(adapter);
 
@@ -51,17 +55,17 @@ public class MainActivityFragment extends Fragment {
                 .setEndpoint("http://my.mlh.io")
                 .build();
 
-        CheckInService service = restAdapter.create(CheckInService.class);
+        service = restAdapter.create(CheckInService.class);
 
-        Callback callback = new Callback<List<User>>() {
+        callback = new Callback<List<User>>() {
 
             @Override
             public void success(List<User> users, Response response) {
                 Log.d(TAG, users.toString());
+                objects.clear();
                 for (User user : users) {
                   objects.add(user);
                 }
-
                 adapter.notifyDataSetChanged();
             }
 
@@ -75,12 +79,26 @@ public class MainActivityFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                return false;
+            case R.id.refresh:
+                service.listUsers(BuildConfig.HACKNY_APP_ID, BuildConfig.HACKNY_APP_SECRET, callback);
+                return true;
+            default:
+                break;
+        }
+        return false;
+    }
+
     public class CheckInAdapter extends BaseAdapter {
 
         private LayoutInflater mInflater;
-        private ArrayList<User> objects;
+        private List<User> objects;
 
-        public CheckInAdapter(Context context, ArrayList<User> objects){
+        public CheckInAdapter(Context context, List<User> objects){
             mInflater = LayoutInflater.from(context);
             this.objects = objects;
         }
@@ -107,6 +125,7 @@ public class MainActivityFragment extends Fragment {
             if (convertView == null){
                 view = mInflater.inflate(R.layout.list_item, parent, false);
                 holder = new ViewHolder(view);
+                view.setTag(holder);
             } else {
                 view = convertView;
                 holder = (ViewHolder) view.getTag();
