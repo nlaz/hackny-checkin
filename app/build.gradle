@@ -16,6 +16,7 @@ android {
 
         buildConfigField "String", "HACKNY_APP_ID", HACKNY_APP_ID
         buildConfigField "String", "HACKNY_APP_SECRET", HACKNY_APP_SECRET
+
     }
     buildTypes {
         release {
